@@ -1,2 +1,1 @@
-# HDFS_Distributed_File_System
-Hadoop Distributed File System (HDFS)
+# Hadoop Distributed File System (HDFS)
