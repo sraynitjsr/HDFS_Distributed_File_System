@@ -1,15 +1,19 @@
 #!/bin/bash
 
-POD_NAME="ndl-hdfs-datanode-0"
-DATA="Hello, world!"
-DEST_PATH="/tmp/hdfs/data"
+NAMESPACE="ndl"
+DATANODE_POD_NAME="ndl-hdfs-datanode-0"
+TEMP_FILE="/tmp/data.txt"
 
-COMMAND="echo \"$DATA\" | hdfs dfs -put - \"$DEST_PATH\""
+start_time=$(date +%s.%N)
 
-kubectl exec -it "$POD_NAME" -- bash -c "$COMMAND"
+for i in {1..100}; do
+  current_time=$(date "+%Y-%m-%d %H:%M:%S")
+  data="Hello World $i - $current_time"
+  kubectl exec -it $DATANODE_POD_NAME -n $NAMESPACE -- /bin/bash -c "echo \"$data\" >> $TEMP_FILE"
+done
 
-if [ $? -eq 0 ]; then
-    echo "Data written successfully to $DEST_PATH"
-else
-    echo "Error: Failed to write data to $DEST_PATH"
-fi
+end_time=$(date +%s.%N)
+
+total_time=$(echo "$end_time" "$start_time" | awk '{print $1 - $2}')
+
+echo "Total time spent writing data: $total_time seconds (approximately)"
