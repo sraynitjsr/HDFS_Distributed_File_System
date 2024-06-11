@@ -1,14 +1,19 @@
 #!/bin/bash
 
-POD_NAME="ndl-hdfs-datanode-0"
-SRC_PATH="/tmp/hdfs/data"
+NAMESPACE="ndl"
+DATANODE_POD_NAME="ndl-hdfs-datanode-0"
+HDFS_FILE="/tmp/data.txt"
+LOCAL_FILE="downloaded_data.txt"
 
-COMMAND="hdfs dfs -cat \"$SRC_PATH\""
+file_exists=$(kubectl exec -n $NAMESPACE $DATANODE_POD_NAME -- /bin/bash -c "test -f $HDFS_FILE && echo yes || echo no")
 
-kubectl exec -it "$POD_NAME" -- bash -c "$COMMAND"
-
-if [ $? -eq 0 ]; then
-    echo "Data read successfully from $SRC_PATH"
+if [ "$file_exists" == "yes" ]; then
+  rm -rf $LOCAL_FILE
+  start_time=$(date +%s.%N)
+  kubectl cp -n $NAMESPACE $DATANODE_POD_NAME:$HDFS_FILE $LOCAL_FILE
+  end_time=$(date +%s.%N)
+  total_time=$(echo "$end_time" "$start_time" | awk '{print $1 - $2}')
+  echo "File '$HDFS_FILE' copied successfully to '$LOCAL_FILE' in $total_time seconds (approximately)"
 else
-    echo "Error: Failed to read data from $SRC_PATH"
+  echo "File '$HDFS_FILE' does not exist on the DataNode pod."
 fi
